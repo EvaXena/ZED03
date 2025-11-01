@@ -11,6 +11,7 @@
 在开始之前，请确保您已安装以下软件：
 *   [Git](https://git-scm.com/)
 *   [Conda (Miniconda 或 Anaconda)](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html)
+*   [Vitis_Hls(2024.1)]
 
 ### 2. 安装步骤
 
