@@ -231,6 +231,7 @@ if __name__ == '__main__':
 
 
     #保存结果
+    os.makedirs("../result_img",exist_ok=True)
     plt.imsave("../result_img/original_img.jpg",original_image.numpy())
     plt.imsave("../result_img/keras_img.jpg",enhanced_image_keras_clipped)
     plt.imsave("../result_img/hls_img.jpg",enhanced_image_hls_clipped)
