@@ -20,7 +20,7 @@
 1.  **克隆本仓库：**
     ```bash
     git clone https://github.com/EvaXena/ZED03.git
-    cd ZED03
+    cd ZED03/hls4ml
     ```
 
 2.  **创建并激活 Conda 环境：**
