@@ -14,7 +14,8 @@ from tensorflow.keras.utils import custom_object_scope
 #                             --- 配置区 ---
 # ==============================================================================
 KERAS_MODEL_WEIGHTS_PATH = 'model/final_model.h5'
-INPUT_IMAGE_PATH = '../test_img/low_light_image.jpg'
+#INPUT_IMAGE_PATH = '../test_img/low_light_image.jpg'
+INPUT_DIR_PATH = '../test_img'
 HLS_OUTPUT_DIR = '../hls4mlprj_tanhlu_enhance'
 MODEL_INPUT_SIZE_H = 50
 MODEL_INPUT_SIZE_W = 50
@@ -156,6 +157,30 @@ def print_hls_model_details(hls_model):
             print("  - No trainable weights in this layer.")
     print("\n" + "=" * 60)
 
+
+def load_and_progress_imgs(INPUT_DIR_PATH,MODEL_INPUT_SIZE_H,MODEL_INPUT_SIZE_W):
+    imgs = []
+    print(f"\n--- 步骤 4: 加载并预处理图像 '{INPUT_DIR_PATH}' ---")
+    if not os.path.exists(INPUT_DIR_PATH):
+        raise FileNotFoundError(f"错误: 找不到输入图像 '{INPUT_DIR_PATH}'")
+    for root,dirs,files in os.walk(INPUT_DIR_PATH):
+        for filename in files:
+            img = []
+            filepath = os.path.join(root,filename)
+            print(filepath)
+            img_raw = tf.io.read_file(filepath)
+            original_image = tf.io.decode_image(img_raw, channels=3, expand_animations=False)
+            original_image.set_shape([None, None, 3])
+            image_for_model = tf.image.resize(original_image, [MODEL_INPUT_SIZE_H, MODEL_INPUT_SIZE_W])
+            image_for_model = tf.cast(image_for_model, tf.float32) / 255.0
+            original_shape = tf.shape(original_image)[0:2]
+            input_tensor_tf = tf.expand_dims(image_for_model, axis=0)
+            print(f"预处理完成。送入模型的张量形状: {input_tensor_tf.shape}")
+            img.append(input_tensor_tf)
+            img.append(original_image)
+            imgs.append(img)
+    return imgs
+
 # =================================================================
 #           主程序 (已更新)
 # =================================================================
@@ -187,59 +212,124 @@ if __name__ == '__main__':
     print("\n--- 步骤 3: 检查 hls4ml 模型各层精度 ---")
     print_hls_model_details(hls_model)
 
-    # 步骤 4: 加载并预处理图像
-    print(f"\n--- 步骤 4: 加载并预处理图像 '{INPUT_IMAGE_PATH}' ---")
-    # ... (后续代码与之前版本相同)
-    if not os.path.exists(INPUT_IMAGE_PATH):
-        raise FileNotFoundError(f"错误: 找不到输入图像 '{INPUT_IMAGE_PATH}'")
-    img_raw = tf.io.read_file(INPUT_IMAGE_PATH)
-    original_image = tf.io.decode_image(img_raw, channels=3, expand_animations=False)
-    original_image.set_shape([None, None, 3])
-    image_for_model = tf.image.resize(original_image, [MODEL_INPUT_SIZE_H, MODEL_INPUT_SIZE_W])
-    image_for_model = tf.cast(image_for_model, tf.float32) / 255.0
-    original_shape = tf.shape(original_image)[0:2]
-    input_tensor_tf = tf.expand_dims(image_for_model, axis=0)
-    print(f"预处理完成。送入模型的张量形状: {input_tensor_tf.shape}")
 
+##加载处理单张图片
+##-----------------------------------------------------------------------------------------------------
+    # # 步骤 4: 加载并预处理图像
+    # print(f"\n--- 步骤 4: 加载并预处理图像 '{INPUT_IMAGE_PATH}' ---")
+    # # ... (后续代码与之前版本相同)
+    # if not os.path.exists(INPUT_IMAGE_PATH):
+    #     raise FileNotFoundError(f"错误: 找不到输入图像 '{INPUT_IMAGE_PATH}'")
+    # img_raw = tf.io.read_file(INPUT_IMAGE_PATH)
+    # original_image = tf.io.decode_image(img_raw, channels=3, expand_animations=False)
+    # original_image.set_shape([None, None, 3])
+    # image_for_model = tf.image.resize(original_image, [MODEL_INPUT_SIZE_H, MODEL_INPUT_SIZE_W])
+    # image_for_model = tf.cast(image_for_model, tf.float32) / 255.0
+    # original_shape = tf.shape(original_image)[0:2]
+    # input_tensor_tf = tf.expand_dims(image_for_model, axis=0)
+    # print(f"预处理完成。送入模型的张量形状: {input_tensor_tf.shape}")
+##-----------------------------------------------------------------------------------------------------
+##加载处理多张图片
+##-----------------------------------------------------------------------------------------------------
+    imgs = load_and_progress_imgs(INPUT_DIR_PATH,MODEL_INPUT_SIZE_H,MODEL_INPUT_SIZE_W)
+##-----------------------------------------------------------------------------------------------------
+
+    
+##单张图像预测
+##-----------------------------------------------------------------------------------------------------
     # 步骤 5: 预测
-    print("\n--- 步骤 5a: 使用 Keras 模型(软件)预测曲线图 ---")
-    curve_map_keras_tf = keras_model.predict(input_tensor_tf)
-    print("\n--- 步骤 5b: 使用 hls4ml 模型(硬件)预测曲线图 ---")
-    input_tensor_np = input_tensor_tf.numpy()
-    curve_map_hls_np = hls_model.predict(input_tensor_np)
+    # print("\n--- 步骤 5a: 使用 Keras 模型(软件)预测曲线图 ---")
+    # curve_map_keras_tf = keras_model.predict(input_tensor_tf)
+    # print("\n--- 步骤 5b: 使用 hls4ml 模型(硬件)预测曲线图 ---")
+    # input_tensor_np = input_tensor_tf.numpy()
+    # curve_map_hls_np = hls_model.predict(input_tensor_np)
 
-    # 步骤 6: 增强
-    original_image_normalized_tf = tf.cast(original_image, tf.float32) / 255.0
-    original_image_normalized_tf = tf.expand_dims(original_image_normalized_tf, axis=0)
-    print("\n--- 步骤 6a: 应用 enhance 函数 (Keras 结果) ---")
-    curve_map_keras_resized_tf = tf.image.resize(curve_map_keras_tf, original_shape, method=tf.image.ResizeMethod.BILINEAR)
-    enhanced_image_keras_tensor = enhance(original_image_normalized_tf, curve_map_keras_resized_tf)
-    print("Keras 结果增强完成。")
-    print("\n--- 步骤 6b: 应用 enhance 函数 (hls4ml 结果) ---")
-    curve_map_hls_np_reshaped = curve_map_hls_np.reshape((1, MODEL_INPUT_SIZE_H, MODEL_INPUT_SIZE_W, 3))
-    curve_map_hls_tf = tf.convert_to_tensor(curve_map_hls_np_reshaped, dtype=tf.float32)
-    curve_map_hls_resized_tf = tf.image.resize(curve_map_hls_tf, original_shape, method=tf.image.ResizeMethod.BILINEAR)
-    enhanced_image_hls_tensor = enhance(original_image_normalized_tf, curve_map_hls_resized_tf)
-    print("hls4ml 结果增强完成。")
+    # # 步骤 6: 增强
+    # original_image_normalized_tf = tf.cast(original_image, tf.float32) / 255.0
+    # original_image_normalized_tf = tf.expand_dims(original_image_normalized_tf, axis=0)
+    # print("\n--- 步骤 6a: 应用 enhance 函数 (Keras 结果) ---")
+    # curve_map_keras_resized_tf = tf.image.resize(curve_map_keras_tf, original_shape, method=tf.image.ResizeMethod.BILINEAR)
+    # enhanced_image_keras_tensor = enhance(original_image_normalized_tf, curve_map_keras_resized_tf)
+    # print("Keras 结果增强完成。")
+    # print("\n--- 步骤 6b: 应用 enhance 函数 (hls4ml 结果) ---")
+    # curve_map_hls_np_reshaped = curve_map_hls_np.reshape((1, MODEL_INPUT_SIZE_H, MODEL_INPUT_SIZE_W, 3))
+    # curve_map_hls_tf = tf.convert_to_tensor(curve_map_hls_np_reshaped, dtype=tf.float32)
+    # curve_map_hls_resized_tf = tf.image.resize(curve_map_hls_tf, original_shape, method=tf.image.ResizeMethod.BILINEAR)
+    # enhanced_image_hls_tensor = enhance(original_image_normalized_tf, curve_map_hls_resized_tf)
+    # print("hls4ml 结果增强完成。")
 
-    # 步骤 7: 可视化
-    print("\n--- 步骤 7: 生成并显示最终对比结果 ---")
-    enhanced_image_keras_np = np.squeeze(enhanced_image_keras_tensor.numpy(), axis=0)
-    enhanced_image_keras_clipped = np.clip(enhanced_image_keras_np, 0, 1)
-    enhanced_image_hls_np = np.squeeze(enhanced_image_hls_tensor.numpy(), axis=0)
-    enhanced_image_hls_clipped = np.clip(enhanced_image_hls_np, 0, 1)
-
-
-    #保存结果
-    os.makedirs("../result_img",exist_ok=True)
-    plt.imsave("../result_img/original_img.jpg",original_image.numpy())
-    plt.imsave("../result_img/keras_img.jpg",enhanced_image_keras_clipped)
-    plt.imsave("../result_img/hls_img.jpg",enhanced_image_hls_clipped)
+    # # 步骤 7: 可视化
+    # print("\n--- 步骤 7: 生成并显示最终对比结果 ---")
+    # enhanced_image_keras_np = np.squeeze(enhanced_image_keras_tensor.numpy(), axis=0)
+    # enhanced_image_keras_clipped = np.clip(enhanced_image_keras_np, 0, 1)
+    # enhanced_image_hls_np = np.squeeze(enhanced_image_hls_tensor.numpy(), axis=0)
+    # enhanced_image_hls_clipped = np.clip(enhanced_image_hls_np, 0, 1)
 
 
+    # #保存结果
+    # os.makedirs("../result_img",exist_ok=True)
+    # plt.imsave("../result_img/original_img.jpg",original_image.numpy())
+    # plt.imsave("../result_img/keras_img.jpg",enhanced_image_keras_clipped)
+    # plt.imsave("../result_img/hls_img.jpg",enhanced_image_hls_clipped)
 
-    plt.figure(figsize=(18, 6))
-    plt.subplot(1, 3, 1); plt.imshow(original_image); plt.title('Original Image'); plt.axis('off')
-    plt.subplot(1, 3, 2); plt.imshow(enhanced_image_keras_clipped); plt.title('Enhanced (Keras Model)'); plt.axis('off')
-    plt.subplot(1, 3, 3); plt.imshow(enhanced_image_hls_clipped); plt.title('Enhanced (hls4ml Model)'); plt.axis('off')
-    plt.tight_layout(); plt.show()
+
+
+    # plt.figure(figsize=(18, 6))
+    # plt.subplot(1, 3, 1); plt.imshow(original_image); plt.title('Original Image'); plt.axis('off')
+    # plt.subplot(1, 3, 2); plt.imshow(enhanced_image_keras_clipped); plt.title('Enhanced (Keras Model)'); plt.axis('off')
+    # plt.subplot(1, 3, 3); plt.imshow(enhanced_image_hls_clipped); plt.title('Enhanced (hls4ml Model)'); plt.axis('off')
+    # plt.tight_layout(); plt.show()
+##-----------------------------------------------------------------------------------------------------
+
+
+##多张图像预测
+##-----------------------------------------------------------------------------------------------------
+    filename = 0
+    for img in imgs:
+        input_tensor_tf = img[0]
+        original_image = img[1]
+        filename = filename + 1
+        original_shape = tf.shape(original_image)[0:2]
+        print("\n--- 步骤 5a: 使用 Keras 模型(软件)预测曲线图 ---")
+        curve_map_keras_tf = keras_model.predict(input_tensor_tf)
+        print("\n--- 步骤 5b: 使用 hls4ml 模型(硬件)预测曲线图 ---")
+        input_tensor_np = input_tensor_tf.numpy()
+        curve_map_hls_np = hls_model.predict(input_tensor_np)
+
+        # 步骤 6: 增强
+        original_image_normalized_tf = tf.cast(original_image, tf.float32) / 255.0
+        original_image_normalized_tf = tf.expand_dims(original_image_normalized_tf, axis=0)
+        print("\n--- 步骤 6a: 应用 enhance 函数 (Keras 结果) ---")
+        curve_map_keras_resized_tf = tf.image.resize(curve_map_keras_tf, original_shape, method=tf.image.ResizeMethod.BILINEAR)
+        enhanced_image_keras_tensor = enhance(original_image_normalized_tf, curve_map_keras_resized_tf)
+        print("Keras 结果增强完成。")
+        print("\n--- 步骤 6b: 应用 enhance 函数 (hls4ml 结果) ---")
+        curve_map_hls_np_reshaped = curve_map_hls_np.reshape((1, MODEL_INPUT_SIZE_H, MODEL_INPUT_SIZE_W, 3))
+        curve_map_hls_tf = tf.convert_to_tensor(curve_map_hls_np_reshaped, dtype=tf.float32)
+        curve_map_hls_resized_tf = tf.image.resize(curve_map_hls_tf, original_shape, method=tf.image.ResizeMethod.BILINEAR)
+        enhanced_image_hls_tensor = enhance(original_image_normalized_tf, curve_map_hls_resized_tf)
+        print("hls4ml 结果增强完成。")
+
+        # 步骤 7: 可视化
+        print("\n--- 步骤 7: 生成并显示最终对比结果 ---")
+        enhanced_image_keras_np = np.squeeze(enhanced_image_keras_tensor.numpy(), axis=0)
+        enhanced_image_keras_clipped = np.clip(enhanced_image_keras_np, 0, 1)
+        enhanced_image_hls_np = np.squeeze(enhanced_image_hls_tensor.numpy(), axis=0)
+        enhanced_image_hls_clipped = np.clip(enhanced_image_hls_np, 0, 1)
+
+
+        #保存结果
+        os.makedirs("../result_img",exist_ok=True)
+        plt.imsave(f"../result_img/{filename}_img.jpg",original_image.numpy())
+        plt.imsave(f"../result_img/{filename}_keras_img.jpg",enhanced_image_keras_clipped)
+        plt.imsave(f"../result_img/{filename}_hls_img.jpg",enhanced_image_hls_clipped)
+
+
+
+        # plt.figure(figsize=(18, 6))
+        # plt.subplot(1, 3, 1); plt.imshow(original_image); plt.title('Original Image'); plt.axis('off')
+        # plt.subplot(1, 3, 2); plt.imshow(enhanced_image_keras_clipped); plt.title('Enhanced (Keras Model)'); plt.axis('off')
+        # plt.subplot(1, 3, 3); plt.imshow(enhanced_image_hls_clipped); plt.title('Enhanced (hls4ml Model)'); plt.axis('off')
+        # plt.tight_layout(); plt.show()
+
+##-----------------------------------------------------------------------------------------------------
