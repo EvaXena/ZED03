@@ -288,7 +288,7 @@ if __name__ == '__main__':
     for img in imgs:
         input_tensor_tf = img[0]
         original_image = img[1]
-        filename = filename + 1
+        
         original_shape = tf.shape(original_image)[0:2]
         print("\n--- 步骤 5a: 使用 Keras 模型(软件)预测曲线图 ---")
         curve_map_keras_tf = keras_model.predict(input_tensor_tf)
@@ -320,11 +320,11 @@ if __name__ == '__main__':
 
         #保存结果
         os.makedirs("../result_img",exist_ok=True)
-        plt.imsave(f"../result_img/{filename}_img.jpg",original_image.numpy())
-        plt.imsave(f"../result_img/{filename}_keras_img.jpg",enhanced_image_keras_clipped)
-        plt.imsave(f"../result_img/{filename}_hls_img.jpg",enhanced_image_hls_clipped)
+        plt.imsave(f"../result_img/{str(filename)}_img.jpg",original_image.numpy())
+        plt.imsave(f"../result_img/{str(filename)}_keras_img.jpg",enhanced_image_keras_clipped)
+        plt.imsave(f"../result_img/{str(filename)}_hls_img.jpg",enhanced_image_hls_clipped)
 
-
+        filename = filename + 1
 
         # plt.figure(figsize=(18, 6))
         # plt.subplot(1, 3, 1); plt.imshow(original_image); plt.title('Original Image'); plt.axis('off')
