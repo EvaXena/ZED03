@@ -60,6 +60,19 @@ python compare.py
 *   脚本使用的测试图片位于 `test_img/` 文件夹内。
 *   预测结果与对比图片将保存在 `result_img/` 文件夹内。
 
+### 第三步：评估模型性能
+
+该脚本用于计算原始图片与增强图片的 MSE, PSNR, SSIM, ED, MED, MAE。
+
+```bash
+python evaluate.py
+```
+
+该脚本用于计算原始图片与增强图片的 MSE, PSNR, SSIM, ED, MED, MAE, UIQE, UIQM。
+
+```bash
+python evaluate_v2.py
+```
 
 ## 🛠️ HLS 工作流程
 
@@ -76,9 +89,13 @@ python compare.py
 .
 ├── src/                  # 主要源代码目录
 │   ├── transform.py      # 用于将 .h5 转换 HLS 工程的脚本
-│   └── compare.py        # 用于对比 Keras 和 HLS 模型输出结果的脚本
+│   ├── compare.py        # 用于对比 Keras 和 HLS 模型输出结果的脚本
+│   ├── evaluate.py       # 用于评估模型性能的脚本(单张图片)
+│   └── evaluate_v2.py    # 用于评估模型性能的脚本(批量图片)
 ├── test_img/             # 存放用于预测的输入图片
 ├── result_img/           # 存放预测结果和对比图片
 ├── requirements_final.txt # Python 依赖包列表
 └── README.md             # 本说明文件
 ```
+
+
