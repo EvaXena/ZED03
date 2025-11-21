@@ -16,6 +16,7 @@ from tensorflow.keras.utils import custom_object_scope
 KERAS_MODEL_WEIGHTS_PATH = 'model/final_model.h5'
 #INPUT_IMAGE_PATH = '../test_img/low_light_image.jpg'
 INPUT_DIR_PATH = '../test_img'
+TRUTH_DIR_PATH = '../truth'
 HLS_OUTPUT_DIR = '../hls4mlprj_tanhlu_enhance'
 MODEL_INPUT_SIZE_H = 50
 MODEL_INPUT_SIZE_W = 50
@@ -168,6 +169,13 @@ def load_and_progress_imgs(INPUT_DIR_PATH,MODEL_INPUT_SIZE_H,MODEL_INPUT_SIZE_W)
             img = []
             filepath = os.path.join(root,filename)
             print(filepath)
+            truthname = filename[:-4] + '_SeaErra.jpg'
+            truth_path =  os.path.join('../truth/',truthname)
+            print(truth_path)
+
+            truth_raw = tf.io.read_file(truth_path)
+            truth_image = tf.io.decode_image(truth_raw, channels=3, expand_animations=False)
+            truth_image.set_shape([None, None, 3])
             img_raw = tf.io.read_file(filepath)
             original_image = tf.io.decode_image(img_raw, channels=3, expand_animations=False)
             original_image.set_shape([None, None, 3])
@@ -178,7 +186,9 @@ def load_and_progress_imgs(INPUT_DIR_PATH,MODEL_INPUT_SIZE_H,MODEL_INPUT_SIZE_W)
             print(f"预处理完成。送入模型的张量形状: {input_tensor_tf.shape}")
             img.append(input_tensor_tf)
             img.append(original_image)
+            img.append(truth_image)
             imgs.append(img)
+            
     return imgs
 
 # =================================================================
@@ -288,6 +298,7 @@ if __name__ == '__main__':
     for img in imgs:
         input_tensor_tf = img[0]
         original_image = img[1]
+        truth_image = img[2]
         
         original_shape = tf.shape(original_image)[0:2]
         print("\n--- 步骤 5a: 使用 Keras 模型(软件)预测曲线图 ---")
@@ -314,6 +325,10 @@ if __name__ == '__main__':
         print("\n--- 步骤 7: 生成并显示最终对比结果 ---")
         enhanced_image_keras_np = np.squeeze(enhanced_image_keras_tensor.numpy(), axis=0)
         enhanced_image_keras_clipped = np.clip(enhanced_image_keras_np, 0, 1)
+
+
+
+
         enhanced_image_hls_np = np.squeeze(enhanced_image_hls_tensor.numpy(), axis=0)
         enhanced_image_hls_clipped = np.clip(enhanced_image_hls_np, 0, 1)
 
@@ -321,7 +336,7 @@ if __name__ == '__main__':
         #保存结果
         os.makedirs("../result_img",exist_ok=True)
         plt.imsave(f"../result_img/{str(filename)}_img.jpg",original_image.numpy())
-        plt.imsave(f"../result_img/{str(filename)}_keras_img.jpg",enhanced_image_keras_clipped)
+        plt.imsave(f"../result_img/{str(filename)}_truth_img.jpg",truth_image.numpy())
         plt.imsave(f"../result_img/{str(filename)}_hls_img.jpg",enhanced_image_hls_clipped)
 
         filename = filename + 1

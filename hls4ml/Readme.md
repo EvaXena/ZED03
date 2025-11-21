@@ -62,13 +62,13 @@ python compare.py
 
 ### 第三步：评估模型性能
 
-该脚本用于计算原始图片与增强图片的 MSE, PSNR, SSIM, ED, MED, MAE。
+该脚本用于计算原始图片与增强图片的 MSE, PSNR, SSIM, ED, MED, MAE。（用于单张图片比较）
 
 ```bash
 python evaluate.py
 ```
 
-该脚本用于计算原始图片与增强图片的 MSE, PSNR, SSIM, ED, MED, MAE, UIQE, UIQM。
+该脚本用于计算原始图片与增强图片的 MSE, PSNR, SSIM, ED, MED, MAE, UIQE, UIQM。（用于批量图片比较）
 
 ```bash
 python evaluate_v2.py
@@ -92,10 +92,10 @@ python evaluate_v2.py
 │   ├── compare.py        # 用于对比 Keras 和 HLS 模型输出结果的脚本
 │   ├── evaluate.py       # 用于评估模型性能的脚本(单张图片)
 │   └── evaluate_v2.py    # 用于评估模型性能的脚本(批量图片)
+│   └── tiff2jpg_v2.py    # 将tiff格式图片转换为jpg图片
 ├── test_img/             # 存放用于预测的输入图片
 ├── result_img/           # 存放预测结果和对比图片
 ├── requirements_final.txt # Python 依赖包列表
 └── README.md             # 本说明文件
 ```
-
 

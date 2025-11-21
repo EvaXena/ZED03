@@ -36,14 +36,11 @@ class Tanhlu(layers.Layer):
 
 # 1. 继承自最基础的 Layer
 class HTanhlu(hls4ml.model.layers.Layer):
-
     _expected_attributes = [
         hls4ml.model.layers.WeightAttribute('alpha'),
         hls4ml.model.layers.WeightAttribute('beta'),
         hls4ml.model.layers.WeightAttribute('lambd'),
     ]
-
-
     def initialize(self):
 
         inp = self.get_input_variable()
@@ -145,7 +142,7 @@ if __name__ == '__main__':
         model = load_model('model/final_model.h5')
     x_batched = np.random.randint(-5, 5, (1, 50, 50, 3), dtype='int32')
     res = model(x_batched)
-    hmodel = hls4ml.converters.convert_from_keras_model(model, output_dir='../hls4mlprj_tanhlu_rf_2_zu15eg_v2', backend='Vitis', io_type='io_stream', hls_config={'Model': {'Precision': 'ap_fixed<16,6>', 'ReuseFactor': 2}},clock_period =10,part = 'xczu15eg-ffvb1156-2-e')
+    hmodel = hls4ml.converters.convert_from_keras_model(model, output_dir='../hls_prj/hls4mlprj_tanhlu_rf_64_clk_2_xcu250', backend='Vitis', io_type='io_stream', hls_config={'Model': {'Precision': 'ap_fixed<16,6>', 'ReuseFactor': 64}},clock_period =2,part = 'xcu250-figd2104-2L-e')
     hmodel.compile()
     hres = hmodel.predict(x_batched.astype('float32'))
     print("Keras result shape:", res.shape)

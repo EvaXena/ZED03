@@ -59,10 +59,10 @@ if __name__ == "__main__":
     # 在 Linux 或 macOS 上，路径可能像这样: '/home/YourUser/Pictures/TIFF_Images'
     
     # 输入文件夹：存放 .tiff 文件的位置
-    input_folder = 'flsea_dataset/imgs'
+    input_folder = '../data_tiff'
     
     # 输出文件夹：转换后的 .jpg 文件将保存在这里
-    output_folder = 'flsea_dataset_jpg/imgs'
+    output_folder = '../data_jpg'
     
     # 调用函数开始转换
     batch_convert_tiff_to_jpg(input_folder, output_folder)

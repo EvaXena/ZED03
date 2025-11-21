@@ -1,3 +1,13 @@
+
+hls_prj/*
+
+logs/*
+
+data/*
+data_tiff/*
+data_jpg/*
 result_img/*
-hls4mlprj_tanhlu_enhance/*
 test_img/*
+truth/*
+
+src/rename.py

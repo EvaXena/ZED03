@@ -170,7 +170,7 @@ if __name__ == "__main__":
         for i in range(num_triplets):
             # Assuming you want to compare the enhanced image with a ground truth/original
             enhanced_img_path = f"{FILE_PATH}/{i}_hls_img.jpg"
-            original_img_path = f"{FILE_PATH}/{i}_img.jpg"    
+            original_img_path = f"{FILE_PATH}/{i}_truth_img.jpg"    
             
             print(f"\n--- 正在处理第 {i} 组图像 ---")
             print(f"增强图: {enhanced_img_path}")
